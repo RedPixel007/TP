@@ -7,7 +7,6 @@ import kotlinx.coroutines.*
 import kotlin.math.*
 
 object ComputationEngine {
-    // собственный scope — движок живёт независимо от запросов
     private val scope = CoroutineScope(Dispatchers.Default + SupervisorJob())
 
     private fun evalFunction(name: String, x: Double): Double = when (name) {
@@ -32,8 +31,10 @@ object ComputationEngine {
     }
 
     fun submit(id: String, request: ComputeRequest) {
+        require(request.n > 0) { "n должно быть больше 0" }
+        require(request.a < request.b) { "a должно быть меньше b" }
+
         scope.launch {
-            // тяжёлые вычисления в пуле потоков — не блокируем сервер
             val value = withContext(Dispatchers.Default) {
                 integrate(request)
             }
