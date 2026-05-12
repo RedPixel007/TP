@@ -7,6 +7,8 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import com.example.storage.ResultStorage
+import java.util.UUID
 
 fun Application.configureRouting() {
     routing {
@@ -16,25 +18,25 @@ fun Application.configureRouting() {
 
         post("/compute") {
             val request = call.receive<ComputeRequest>()
-            // пока просто возвращаем заглушку с данными из запроса
-            call.respond(
-                HttpStatusCode.Accepted,
-                ComputeResult(
-                    id = "stub-id",
-                    status = "PENDING"
-                )
-            )
+            val id = UUID.randomUUID().toString()
+
+            ResultStorage.save(ComputeResult(id = id, status = "PENDING"))
+
+            call.respond(HttpStatusCode.Accepted, ComputeResult(id = id, status = "PENDING"))
         }
 
         get("/result/{id}") {
-            val id = call.parameters["id"] ?: "unknown"
-            call.respond(
-                ComputeResult(
-                    id = id,
-                    status = "DONE",
-                    result = 42.0
-                )
-            )
+            val id = call.parameters["id"] ?: run {
+                call.respond(HttpStatusCode.BadRequest, "ID не указан")
+                return@get
+            }
+
+            val result = ResultStorage.get(id) ?: run {
+                call.respond(HttpStatusCode.NotFound, "Задача $id не найдена")
+                return@get
+            }
+
+            call.respond(result)
         }
     }
 }
