@@ -1,21 +1,40 @@
 package com.example.plugins
 
+import com.example.DTO.ComputeRequest
+import com.example.DTO.ComputeResult
+import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
 fun Application.configureRouting() {
     routing {
+        get("/") {
+            call.respondText("Сервер работает!")
+        }
+
         post("/compute") {
-            call.respondText("OK: задача принята (заглушка)")
+            val request = call.receive<ComputeRequest>()
+            // пока просто возвращаем заглушку с данными из запроса
+            call.respond(
+                HttpStatusCode.Accepted,
+                ComputeResult(
+                    id = "stub-id",
+                    status = "PENDING"
+                )
+            )
         }
 
         get("/result/{id}") {
             val id = call.parameters["id"] ?: "unknown"
-            call.respondText("OK: результат для id=$id (заглушка)")
-        }
-        get("/") {
-            call.respondText("Сервер работает!")
+            call.respond(
+                ComputeResult(
+                    id = id,
+                    status = "DONE",
+                    result = 42.0
+                )
+            )
         }
     }
 }
