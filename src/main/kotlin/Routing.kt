@@ -9,6 +9,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import com.example.storage.ResultStorage
 import java.util.UUID
+import com.example.engine.ComputationEngine
 
 fun Application.configureRouting() {
     routing {
@@ -21,6 +22,7 @@ fun Application.configureRouting() {
             val id = UUID.randomUUID().toString()
 
             ResultStorage.save(ComputeResult(id = id, status = "PENDING"))
+            ComputationEngine.submit(id, request) // запускается асинхронно, не ждём
 
             call.respond(HttpStatusCode.Accepted, ComputeResult(id = id, status = "PENDING"))
         }
